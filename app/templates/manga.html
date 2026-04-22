@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}{{ manga.title }} · MangaReader{% endblock %}
+
+{% block content %}
+<section class="manga-detail" x-data="mangaPage({{ manga.id }}, {{ likes_count }})" x-init="init()">
+    <div class="manga-detail__cover">
+        {% if manga.cover_image %}
+            <img src="{{ manga.cover_image }}" alt="{{ manga.title }}" />
+        {% else %}
+            <div class="manga-card__placeholder" style="aspect-ratio:2/3;">{{ manga.title[0] }}</div>
+        {% endif %}
+    </div>
+
+    <div>
+        <h1 class="manga-detail__title">{{ manga.title }}</h1>
+        {% if manga.author %}<div class="manga-detail__author">{{ manga.author }}</div>{% endif %}
+
+        <div class="manga-detail__meta">
+            <span class="meta-pill">★ <strong>{{ "%.1f"|format(manga.rating or 0) }}</strong></span>
+            <span class="meta-pill">Глав: <strong>{{ chapters|length }}</strong></span>
+            <span class="meta-pill">❤ <strong x-text="likesCount">{{ likes_count }}</strong></span>
+            <span class="meta-pill">💬 <strong>{{ comments_count }}</strong></span>
+        </div>
+
+        {% if manga.genres %}
+        <div class="manga-detail__genres">
+            {% for g in manga.genres %}
+            <a href="/catalog?genre={{ g.name }}" class="chip">{{ g.name }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="manga-detail__desc">{{ manga.description }}</div>
+
+        <div class="manga-detail__actions">
+            {% if chapters %}
+            <a href="/read/{{ chapters[-1].id }}" class="btn btn--primary btn--lg">▶ Начать читать</a>
+            {% endif %}
+
+            <button class="btn btn--ghost"
+                    :class="liked ? 'btn--danger' : ''"
+                    @click="toggleLike()"
+                    :disabled="!user">
+                <span x-text="liked ? '❤ В избранном' : '🤍 Лайк'"></span>
+            </button>
+
+            <div class="bookmark-dropdown" x-data="{ open: false }">
+                <button class="btn btn--ghost"
+                        @click="open = !open"
+                        :disabled="!user">
+                    <span x-text="bookmarkLabel()"></span>
+                    <span style="margin-left:4px;">▾</span>
+                </button>
+                <div class="bookmark-dropdown__menu" x-show="open" @click.outside="open = false" x-cloak>
+                    <template x-for="folder in bookmarkFolders" :key="folder.value">
+                        <button @click="setBookmark(folder.value); open = false"
+                                :class="bookmark === folder.value ? 'is-active' : ''">
+                            <span x-text="folder.label"></span>
+                        </button>
+                    </template>
+                    <template x-if="bookmark">
+                        <button @click="removeBookmark(); open = false" style="color:var(--danger);">Убрать</button>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="chapters-panel">
+    <div class="chapters-panel__head">
+        <h2>Главы</h2>
+        <span class="section__caption">{{ chapters|length }} шт.</span>
+    </div>
+    {% if chapters %}
+        {% for ch in chapters %}
+        <a href="/read/{{ ch.id }}" class="chapter-row" style="color:inherit;">
+            <div class="chapter-row__name">
+                Глава {{ "%g"|format(ch.number) }}
+                {% if ch.title %}<span>{{ ch.title }}</span>{% endif %}
+            </div>
+            <div class="chapter-row__meta">
+                {% if ch.volume %}Том {{ ch.volume }} · {% endif %}{{ ch.pages_count }} стр. · {{ ch.uploaded_at.strftime("%d.%m.%Y") }}
+            </div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="empty" style="border:none; background:transparent;">У этого тайтла пока нет глав.</div>
+    {% endif %}
+</section>
+
+<section class="comments-section" x-data="commentsBlock({{ manga.id }}, null)" x-init="load()">
+    <h2 class="section__title" style="margin-bottom:16px;">Комментарии (<span x-text="total"></span>)</h2>
+
+    <template x-if="user">
+        <form class="comment-form" @submit.prevent="submit()">
+            <textarea x-model="newText" placeholder="Что думаешь о тайтле?"></textarea>
+            <div class="comment-form__footer">
+                <button type="submit" class="btn btn--primary" :disabled="!newText.trim() || posting">
+                    <span x-text="posting ? 'Отправка…' : 'Отправить'"></span>
+                </button>
+            </div>
+        </form>
+    </template>
+    <template x-if="!user">
+        <div class="comment-form">
+            <div class="comment-form__login-hint">
+                Чтобы оставить комментарий, <a href="/login">войди</a> или <a href="/register">зарегистрируйся</a>.
+            </div>
+        </div>
+    </template>
+
+    <div class="comment-list">
+        <template x-for="c in items" :key="c.id">
+            <div class="comment">
+                <div class="comment__head">
+                    <div class="comment__avatar" x-text="c.author.username[0].toUpperCase()"></div>
+                    <div class="comment__author" x-text="c.author.username"></div>
+                    <div class="comment__date" x-text="formatDate(c.created_at)"></div>
+                </div>
+                <div class="comment__body" x-text="c.content"></div>
+                <div class="comment__actions" x-show="user && (user.id === c.author.id || user.role === 'admin')">
+                    <button @click="remove(c.id)">Удалить</button>
+                </div>
+            </div>
+        </template>
+        <template x-if="!loading && items.length === 0">
+            <div class="empty" style="border:none; background:transparent;">Пока без комментариев. Будь первым!</div>
+        </template>
+    </div>
+</section>
+{% endblock %}

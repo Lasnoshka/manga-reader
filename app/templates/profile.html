@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Профиль · MangaReader{% endblock %}
+
+{% block content %}
+<div x-data="profilePage()" x-init="init()">
+    <template x-if="!user">
+        <div class="empty">
+            Чтобы увидеть профиль, <a href="/login" style="color:var(--accent);">войди</a>.
+        </div>
+    </template>
+
+    <template x-if="user">
+        <div>
+            <div style="display:flex; align-items:center; gap:18px; margin-bottom:24px;">
+                <div class="user-menu__avatar" style="width:64px; height:64px; font-size:24px;" x-text="user.username[0].toUpperCase()"></div>
+                <div>
+                    <h1 style="margin:0;" x-text="user.username"></h1>
+                    <div style="color:var(--text-muted);" x-text="user.email"></div>
+                </div>
+            </div>
+
+            <div class="profile-tabs">
+                <button :class="tab === 'bookmarks' ? 'is-active' : ''" @click="tab = 'bookmarks'">Закладки</button>
+                <button :class="tab === 'progress' ? 'is-active' : ''" @click="tab = 'progress'">Продолжить чтение</button>
+            </div>
+
+            <template x-if="tab === 'bookmarks'">
+                <div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;">
+                        <button class="chip" :class="bookmarkFolder === '' ? 'chip--accent' : ''" @click="setFolder('')">Все</button>
+                        <template x-for="f in folders" :key="f.value">
+                            <button class="chip" :class="bookmarkFolder === f.value ? 'chip--accent' : ''" @click="setFolder(f.value)" x-text="f.label"></button>
+                        </template>
+                    </div>
+
+                    <template x-if="bookmarks.length === 0 && !loading">
+                        <div class="empty">В этой папке пока пусто.</div>
+                    </template>
+
+                    <div class="manga-grid" x-show="bookmarks.length > 0">
+                        <template x-for="b in bookmarks" :key="b.id">
+                            <a :href="'/manga/' + b.manga_id" class="manga-card">
+                                <div class="manga-card__cover">
+                                    <template x-if="b.manga && b.manga.cover_image">
+                                        <img :src="b.manga.cover_image" :alt="b.manga.title" />
+                                    </template>
+                                    <template x-if="!b.manga || !b.manga.cover_image">
+                                        <div class="manga-card__placeholder">?</div>
+                                    </template>
+                                </div>
+                                <div class="manga-card__body">
+                                    <h3 class="manga-card__title" x-text="b.manga ? b.manga.title : ('#' + b.manga_id)"></h3>
+                                    <div class="manga-card__author" x-text="folderLabel(b.folder)"></div>
+                                </div>
+                            </a>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <template x-if="tab === 'progress'">
+                <div>
+                    <template x-if="progress.length === 0 && !loading">
+                        <div class="empty">Пока ничего не читал.</div>
+                    </template>
+                    <div class="manga-grid" x-show="progress.length > 0">
+                        <template x-for="p in progress" :key="p.id">
+                            <a :href="'/read/' + p.chapter_id" class="manga-card">
+                                <div class="manga-card__cover">
+                                    <template x-if="p.manga && p.manga.cover_image">
+                                        <img :src="p.manga.cover_image" :alt="p.manga.title" />
+                                    </template>
+                                    <template x-if="!p.manga || !p.manga.cover_image">
+                                        <div class="manga-card__placeholder">?</div>
+                                    </template>
+                                </div>
+                                <div class="manga-card__body">
+                                    <h3 class="manga-card__title" x-text="p.manga ? p.manga.title : ('#' + p.manga_id)"></h3>
+                                    <div class="manga-card__author">Страница <span x-text="p.page_number"></span></div>
+                                </div>
+                            </a>
+                        </template>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </template>
+</div>
+{% endblock %}

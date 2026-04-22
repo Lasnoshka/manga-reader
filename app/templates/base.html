@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Manga Reader{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/main.css" />
+    {% block head %}{% endblock %}
+    <script src="/static/js/app.js" defer></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body x-data="appRoot()" x-init="init()">
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a href="/" class="logo">
+                <span class="logo__mark">M</span>
+                <span class="logo__text">MangaReader</span>
+            </a>
+            <nav class="topnav">
+                <a href="/" class="topnav__link {% if active_nav == 'home' %}is-active{% endif %}">Главная</a>
+                <a href="/catalog" class="topnav__link {% if active_nav == 'catalog' %}is-active{% endif %}">Каталог</a>
+                <a href="/admin/manga"
+                   class="topnav__link {% if active_nav == 'admin' %}is-active{% endif %}"
+                   x-show="user && user.role === 'admin'"
+                   x-cloak>Админка</a>
+            </nav>
+            <form class="topbar__search" method="get" action="/catalog">
+                <input type="text" name="q" placeholder="Поиск манги, автора" />
+                <button type="submit" aria-label="Найти">⌕</button>
+            </form>
+            <div class="topbar__user">
+                <div class="auth-buttons" x-show="!user">
+                    <a href="/login" class="btn btn--ghost">Войти</a>
+                    <a href="/register" class="btn btn--primary">Регистрация</a>
+                </div>
+                <div class="user-menu" x-show="user" x-cloak x-data="{ open: false }">
+                    <button class="user-menu__trigger" @click="open = !open" x-show="user">
+                        <span class="user-menu__avatar" x-text="user ? user.username[0].toUpperCase() : ''"></span>
+                        <span x-text="user ? user.username : ''"></span>
+                    </button>
+                    <div class="user-menu__dropdown" x-show="open" @click.outside="open = false" x-cloak>
+                        <a href="/profile" class="user-menu__item">Профиль</a>
+                        <button class="user-menu__item" @click="logout()">Выйти</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer__inner">
+            <span>MangaReader · pet project · {{ 2026 }}</span>
+            <a href="/docs" target="_blank">API docs</a>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

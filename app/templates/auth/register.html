@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Регистрация · MangaReader{% endblock %}
+
+{% block content %}
+<div class="auth-card" x-data="registerForm()">
+    <h1>Создать аккаунт</h1>
+    <p>Присоединяйся, чтобы сохранять прогресс и собирать любимое.</p>
+
+    <template x-if="error">
+        <div class="alert alert--error" x-text="error"></div>
+    </template>
+
+    <form @submit.prevent="submit()">
+        <div class="form-field">
+            <label>Логин</label>
+            <input type="text" x-model="username" required minlength="3" maxlength="64" autofocus />
+        </div>
+        <div class="form-field">
+            <label>Email</label>
+            <input type="email" x-model="email" required />
+        </div>
+        <div class="form-field">
+            <label>Пароль</label>
+            <input type="password" x-model="password" required minlength="8" maxlength="72" />
+        </div>
+        <button type="submit" class="btn btn--primary btn--block btn--lg" :disabled="loading">
+            <span x-text="loading ? 'Создание…' : 'Создать аккаунт'"></span>
+        </button>
+    </form>
+
+    <div class="auth-card__alt">
+        Уже есть аккаунт? <a href="/login">Войти</a>
+    </div>
+</div>
+{% endblock %}

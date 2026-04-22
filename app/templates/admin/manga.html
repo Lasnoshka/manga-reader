@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Админка · Манга · MangaReader{% endblock %}
+
+{% block content %}
+<section class="admin-page" x-data="adminManga()" x-init="init()">
+    <div class="admin-page__head">
+        <h1>Управление мангой</h1>
+        <button class="btn btn--primary" @click="openCreate()">+ Добавить тайтл</button>
+    </div>
+
+    <template x-if="!user || user.role !== 'admin'">
+        <div class="empty">Доступ только для администратора. <a href="/login">Войти</a>.</div>
+    </template>
+
+    <template x-if="user && user.role === 'admin'">
+        <div>
+            <div class="admin-toolbar">
+                <input type="text" class="admin-toolbar__search" placeholder="Поиск по названию…"
+                       x-model="query" @input.debounce.300ms="load()" />
+                <span class="section__caption" x-text="total + ' тайтлов'"></span>
+            </div>
+
+            <div class="admin-table" x-show="!loading">
+                <div class="admin-table__head">
+                    <span class="admin-col-id">ID</span>
+                    <span class="admin-col-title">Название</span>
+                    <span class="admin-col-author">Автор</span>
+                    <span class="admin-col-rating">★</span>
+                    <span class="admin-col-actions">Действия</span>
+                </div>
+                <template x-for="m in items" :key="m.id">
+                    <div class="admin-table__row">
+                        <span class="admin-col-id admin-table__id" x-text="m.id"></span>
+                        <a class="admin-col-title admin-table__title" :href="`/manga/${m.id}`" x-text="m.title"></a>
+                        <span class="admin-col-author admin-table__muted" x-text="m.author || '—'"></span>
+                        <span class="admin-col-rating" x-text="(m.rating || 0).toFixed(1)"></span>
+                        <span class="admin-col-actions">
+                            <button class="btn btn--ghost btn--sm" @click="openEdit(m)">Изменить</button>
+                            <button class="btn btn--ghost btn--sm admin-table__danger" @click="remove(m)">Удалить</button>
+                        </span>
+                    </div>
+                </template>
+                <template x-if="items.length === 0">
+                    <div class="empty">Ничего не найдено.</div>
+                </template>
+            </div>
+
+            <div class="empty" x-show="loading">Загрузка…</div>
+
+            <div class="pagination" x-show="pagesTotal > 1">
+                <a @click.prevent="goto(page - 1)" href="#" :class="page <= 1 ? 'is-disabled' : ''">←</a>
+                <span class="is-active" x-text="`${page} / ${pagesTotal}`"></span>
+                <a @click.prevent="goto(page + 1)" href="#" :class="page >= pagesTotal ? 'is-disabled' : ''">→</a>
+            </div>
+
+            <div class="admin-modal" x-show="formOpen" x-cloak @click.self="closeForm()">
+                <div class="admin-modal__card">
+                    <div class="admin-modal__head">
+                        <h2 x-text="editingId ? 'Редактировать тайтл' : 'Новый тайтл'"></h2>
+                        <button class="admin-modal__close" @click="closeForm()">×</button>
+                    </div>
+
+                    <form class="admin-form" @submit.prevent="submit()">
+                        <label>
+                            <span>Название *</span>
+                            <input type="text" x-model="form.title" required maxlength="255" />
+                        </label>
+                        <label>
+                            <span>Автор</span>
+                            <input type="text" x-model="form.author" maxlength="255" />
+                        </label>
+                        <label>
+                            <span>Обложка (URL)</span>
+                            <input type="text" x-model="form.cover_image" placeholder="https://…" />
+                        </label>
+                        <label x-show="editingId">
+                            <span>Рейтинг</span>
+                            <input type="number" step="0.1" min="0" max="10" x-model.number="form.rating" />
+                        </label>
+                        <label>
+                            <span>Жанры (через запятую)</span>
+                            <input type="text" x-model="form.genresText" placeholder="Экшн, Фэнтези, Сёнен" />
+                        </label>
+                        <label>
+                            <span>Описание *</span>
+                            <textarea x-model="form.description" rows="6" required></textarea>
+                        </label>
+
+                        <div class="admin-form__footer">
+                            <span class="admin-form__error" x-show="error" x-text="error"></span>
+                            <button type="button" class="btn btn--ghost" @click="closeForm()">Отмена</button>
+                            <button type="submit" class="btn btn--primary" :disabled="saving">
+                                <span x-text="saving ? 'Сохранение…' : (editingId ? 'Сохранить' : 'Создать')"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </template>
+</section>
+{% endblock %}

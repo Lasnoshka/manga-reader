@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project
+media/covers/*
+media/chapters/*
+!media/covers/.gitkeep
+!media/chapters/.gitkeep
+.env
+*.log
+logs/
+.pytest_cache/
+
+# Databases
+*.db
+*.sqlite3
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Alembic
+migrations/versions/*.pyc

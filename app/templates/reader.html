@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}{{ manga.title }} · Глава {{ "%g"|format(chapter.number) }}{% endblock %}
+
+{% block content %}
+<div class="reader"
+     x-data="readerBar({{ manga.id }}, {{ chapter.id }}, {{ pages|length }}, {{ prev_id if prev_id is not none else 'null' }}, {{ next_id if next_id is not none else 'null' }})"
+     x-init="init()"
+     @keydown.escape.window="drawerOpen = false">
+
+    <div class="reader-bar">
+        <h1>
+            <a href="/manga/{{ manga.id }}">{{ manga.title }}</a>
+            <span>Глава {{ "%g"|format(chapter.number) }}{% if chapter.title %} · {{ chapter.title }}{% endif %}</span>
+        </h1>
+        <div class="reader-bar__nav">
+            {% if prev_id %}
+                <a href="/read/{{ prev_id }}" class="btn btn--ghost">← Пред.</a>
+            {% else %}
+                <button class="btn btn--ghost" disabled>← Пред.</button>
+            {% endif %}
+            <button class="btn btn--ghost" @click="drawerOpen = true">☰ Главы</button>
+            <a href="/manga/{{ manga.id }}" class="btn btn--ghost">К тайтлу</a>
+            {% if next_id %}
+                <a href="/read/{{ next_id }}" class="btn btn--primary">След. →</a>
+            {% else %}
+                <button class="btn btn--ghost" disabled>След. →</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="chapter-drawer__backdrop" :class="drawerOpen && 'is-open'" @click="drawerOpen = false"></div>
+    <aside class="chapter-drawer" :class="drawerOpen && 'is-open'">
+        <div class="chapter-drawer__head">
+            <h3>Главы · {{ all_chapters|length }}</h3>
+            <button class="chapter-drawer__close" @click="drawerOpen = false" aria-label="Закрыть">×</button>
+        </div>
+        <div class="chapter-drawer__list">
+            {% for ch in all_chapters %}
+            <a href="/read/{{ ch.id }}"
+               class="chapter-drawer__item {% if ch.id == chapter.id %}is-current{% endif %}">
+                <span class="chapter-drawer__item-title">
+                    Глава {{ "%g"|format(ch.number) }}{% if ch.title %} · {{ ch.title }}{% endif %}
+                </span>
+                <span class="chapter-drawer__item-meta">
+                    {% if ch.volume %}Том {{ ch.volume }} · {% endif %}{{ ch.pages_count }} стр.
+                </span>
+            </a>
+            {% else %}
+            <div class="chapter-drawer__empty">Нет глав.</div>
+            {% endfor %}
+        </div>
+    </aside>
+
+    <div class="reader-pages">
+        {% for page in pages %}
+        <div class="reader-page" data-page="{{ page.page_number }}">
+            <img src="{{ page.image_path }}" alt="Page {{ page.page_number }}" loading="lazy" />
+        </div>
+        {% else %}
+        <div class="empty">У этой главы нет страниц.</div>
+        {% endfor %}
+
+        <div class="reader-end">
+            <h3>Глава прочитана</h3>
+            <p>{% if next_id %}Дальше — следующая глава.{% else %}Это последняя доступная глава.{% endif %}</p>
+            <div class="reader-end__actions">
+                <a href="/manga/{{ manga.id }}" class="btn btn--ghost">К тайтлу</a>
+                {% if next_id %}<a href="/read/{{ next_id }}" class="btn btn--primary">Следующая глава →</a>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

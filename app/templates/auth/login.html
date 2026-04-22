@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Войти · MangaReader{% endblock %}
+
+{% block content %}
+<div class="auth-card" x-data="loginForm()">
+    <h1>С возвращением</h1>
+    <p>Войди, чтобы продолжать с того, где остановился.</p>
+
+    <template x-if="error">
+        <div class="alert alert--error" x-text="error"></div>
+    </template>
+
+    <form @submit.prevent="submit()">
+        <div class="form-field">
+            <label>Логин или email</label>
+            <input type="text" x-model="username" required autofocus />
+        </div>
+        <div class="form-field">
+            <label>Пароль</label>
+            <input type="password" x-model="password" required />
+        </div>
+        <button type="submit" class="btn btn--primary btn--block btn--lg" :disabled="loading">
+            <span x-text="loading ? 'Вход…' : 'Войти'"></span>
+        </button>
+    </form>
+
+    <div class="auth-card__alt">
+        Нет аккаунта? <a href="/register">Создать</a>
+    </div>
+</div>
+{% endblock %}

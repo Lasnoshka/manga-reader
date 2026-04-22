@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Каталог · MangaReader{% endblock %}
+
+{% macro paginate_url(page_num) -%}
+?page={{ page_num }}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if query %}&q={{ query }}{% endif %}
+{%- endmacro %}
+
+{% block content %}
+<section class="catalog">
+    <aside class="catalog__sidebar">
+        <div class="filter-block">
+            <h3 class="filter-block__title">Сортировка</h3>
+            <div class="filter-list">
+                {% for value, label in sort_options %}
+                <a href="?sort={{ value }}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if query %}&q={{ query }}{% endif %}"
+                   class="{% if value == selected_sort %}is-active{% endif %}">{{ label }}</a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="filter-block">
+            <h3 class="filter-block__title">Жанры</h3>
+            <div class="filter-list">
+                <a href="?sort={{ selected_sort }}{% if query %}&q={{ query }}{% endif %}"
+                   class="{% if not selected_genre %}is-active{% endif %}">Все жанры</a>
+                {% for g in genres %}
+                <a href="?sort={{ selected_sort }}&genre={{ g.name }}{% if query %}&q={{ query }}{% endif %}"
+                   class="{% if selected_genre and selected_genre|lower == g.name|lower %}is-active{% endif %}">{{ g.name }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </aside>
+
+    <div>
+        <div class="catalog__head">
+            <h1>Каталог{% if query %} · «{{ query }}»{% endif %}{% if selected_genre %} · {{ selected_genre }}{% endif %}</h1>
+            <span class="section__caption">{{ total }} тайтл{{ "ов" if total != 1 else "" }}</span>
+        </div>
+
+        {% if items %}
+        <div class="manga-grid">
+            {% for manga in items %}
+                {% include "_partials/manga_card.html" %}
+            {% endfor %}
+        </div>
+
+        {% if pages_total > 1 %}
+        <div class="pagination">
+            <a href="{{ paginate_url(page - 1)|trim }}" class="{% if page <= 1 %}is-disabled{% endif %}">←</a>
+            {% for p in range(1, pages_total + 1) %}
+                {% if p == page %}
+                    <span class="is-active">{{ p }}</span>
+                {% elif p <= 3 or p > pages_total - 3 or (p >= page - 1 and p <= page + 1) %}
+                    <a href="{{ paginate_url(p)|trim }}">{{ p }}</a>
+                {% elif p == 4 or p == pages_total - 3 %}
+                    <span>…</span>
+                {% endif %}
+            {% endfor %}
+            <a href="{{ paginate_url(page + 1)|trim }}" class="{% if page >= pages_total %}is-disabled{% endif %}">→</a>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty">Ничего не нашлось. Попробуй изменить фильтры.</div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

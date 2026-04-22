@@ -1,0 +1,23 @@
+<a href="/manga/{{ manga.id }}" class="manga-card">
+    <div class="manga-card__cover">
+        {% if manga.cover_image %}
+            <img src="{{ manga.cover_image }}" alt="{{ manga.title }}" loading="lazy" />
+        {% else %}
+            <div class="manga-card__placeholder">{{ manga.title[0] }}</div>
+        {% endif %}
+        <div class="manga-card__rating">★ {{ "%.1f"|format(manga.rating or 0) }}</div>
+    </div>
+    <div class="manga-card__body">
+        <h3 class="manga-card__title">{{ manga.title }}</h3>
+        {% if manga.author %}
+            <div class="manga-card__author">{{ manga.author }}</div>
+        {% endif %}
+        {% if manga.genres %}
+            <div class="manga-card__genres">
+                {% for g in manga.genres[:3] %}
+                    <span class="chip chip--sm">{{ g.name }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</a>

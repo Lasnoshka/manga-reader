@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}MangaReader · Главная{% endblock %}
+
+{% block content %}
+{% set top = popular[0] if popular else None %}
+{% if top %}
+<section class="hero">
+    <a href="/manga/{{ top.id }}" class="hero__main">
+        {% if top.cover_image %}<img src="{{ top.cover_image }}" alt="{{ top.title }}" />{% endif %}
+        <div class="hero__overlay">
+            <span class="chip chip--accent" style="align-self:flex-start; margin-bottom:12px;">★ {{ "%.1f"|format(top.rating or 0) }} · ТОП недели</span>
+            <h1 class="hero__title">{{ top.title }}</h1>
+            <div class="hero__meta">{{ top.author or "" }}{% if top.genres %} · {{ top.genres[0].name }}{% endif %}</div>
+            <p style="color:var(--text-secondary); margin:0; max-width:560px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">{{ top.description }}</p>
+        </div>
+    </a>
+    <div class="hero__list">
+        {% for m in popular[1:6] %}
+        <a href="/manga/{{ m.id }}" class="hero__list-item">
+            {% if m.cover_image %}<img src="{{ m.cover_image }}" alt="{{ m.title }}" />{% endif %}
+            <div class="hero__list-info">
+                <h4>{{ m.title }}</h4>
+                <span>★ {{ "%.1f"|format(m.rating or 0) }}{% if m.author %} · {{ m.author }}{% endif %}</span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="section">
+    <div class="section__head">
+        <h2 class="section__title">Свежие тайтлы</h2>
+        <a href="/catalog" class="section__caption">Весь каталог →</a>
+    </div>
+    {% if latest %}
+    <div class="manga-grid">
+        {% for manga in latest %}
+            {% include "_partials/manga_card.html" %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+        Каталог пуст. Запусти <code>python scripts/seed_db.py</code> чтобы наполнить БД.
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,14 @@
+[project]
+name = "manga-reader"
+version = "0.1.0"
+description = "Async manga reader backend on FastAPI + PostgreSQL + Redis with SSR web UI."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.pycodestyle]
+max-line-length = 120
