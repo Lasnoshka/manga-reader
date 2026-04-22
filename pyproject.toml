@@ -6,9 +6,5 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-asyncio_mode = "auto"
-
 [tool.pycodestyle]
 max-line-length = 120
