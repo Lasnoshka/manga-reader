@@ -26,14 +26,39 @@ router = APIRouter(prefix="/comments", tags=["comments"])
 
 
 class CommentCreateRequest(BaseModel):
-    manga_id: Optional[int] = None
-    chapter_id: Optional[int] = None
-    parent_id: Optional[int] = None
-    content: str = Field(min_length=1, max_length=4000)
+    manga_id: Optional[int] = Field(
+        default=None,
+        description="Target manga ID. Provide either manga_id, chapter_id, or parent_id.",
+        examples=[42],
+    )
+    chapter_id: Optional[int] = Field(
+        default=None,
+        description="Target chapter ID; mutually optional with manga_id.",
+        examples=[101],
+    )
+    parent_id: Optional[int] = Field(
+        default=None,
+        description=(
+            "Parent comment ID for a reply. Replies inherit manga_id/chapter_id "
+            "from the parent; replies-to-replies are not allowed."
+        ),
+        examples=[7],
+    )
+    content: str = Field(
+        min_length=1,
+        max_length=4000,
+        description="Comment body, 1–4000 characters.",
+        examples=["Loved this chapter, the art was incredible."],
+    )
 
 
 class CommentUpdateRequest(BaseModel):
-    content: str = Field(min_length=1, max_length=4000)
+    content: str = Field(
+        min_length=1,
+        max_length=4000,
+        description="New comment body, 1–4000 characters.",
+        examples=["Edited: also great pacing."],
+    )
 
 
 class CommentAuthor(BaseModel):

@@ -1,7 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,9 +18,12 @@ router = APIRouter(prefix="/manga/{manga_id}/like", tags=["likes"])
 
 
 class LikeStatusResponse(BaseModel):
-    manga_id: int
-    likes_count: int
-    liked: bool
+    manga_id: int = Field(examples=[42])
+    likes_count: int = Field(description="Total likes on this manga.", examples=[1234])
+    liked: bool = Field(
+        description="Whether the current user has liked this manga (false for anonymous callers).",
+        examples=[True],
+    )
 
 
 async def _likes_count(db: AsyncSession, manga_id: int) -> int:

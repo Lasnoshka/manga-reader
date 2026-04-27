@@ -20,16 +20,24 @@ router = APIRouter(prefix="/progress", tags=["progress"])
 
 
 class ProgressUpsertRequest(BaseModel):
-    manga_id: int
-    chapter_id: int
-    page_number: int = Field(default=1, ge=1)
+    manga_id: int = Field(description="Manga the user is reading.", examples=[42])
+    chapter_id: int = Field(
+        description="Current chapter; must belong to the given manga.",
+        examples=[101],
+    )
+    page_number: int = Field(
+        default=1,
+        ge=1,
+        description="1-indexed current page within the chapter.",
+        examples=[7],
+    )
 
 
 class ProgressResponse(BaseModel):
-    id: int
-    manga_id: int
-    chapter_id: int
-    page_number: int
+    id: int = Field(examples=[5])
+    manga_id: int = Field(examples=[42])
+    chapter_id: int = Field(examples=[101])
+    page_number: int = Field(description="1-indexed page.", examples=[7])
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

@@ -20,19 +20,28 @@ router = APIRouter(prefix="/bookmarks", tags=["bookmarks"])
 ALLOWED_FOLDERS = {"reading", "planned", "completed", "dropped", "favorite"}
 
 
+_FOLDER_DESCRIPTION = (
+    "Folder name. One of: reading, planned, completed, dropped, favorite."
+)
+
+
 class BookmarkCreateRequest(BaseModel):
-    manga_id: int
-    folder: str = Field(default="reading")
+    manga_id: int = Field(description="ID of the manga to bookmark.", examples=[42])
+    folder: str = Field(
+        default="reading",
+        description=_FOLDER_DESCRIPTION,
+        examples=["reading"],
+    )
 
 
 class BookmarkUpdateRequest(BaseModel):
-    folder: str
+    folder: str = Field(description=_FOLDER_DESCRIPTION, examples=["completed"])
 
 
 class BookmarkResponse(BaseModel):
-    id: int
-    manga_id: int
-    folder: str
+    id: int = Field(examples=[7])
+    manga_id: int = Field(examples=[42])
+    folder: str = Field(description=_FOLDER_DESCRIPTION, examples=["reading"])
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

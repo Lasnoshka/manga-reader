@@ -31,9 +31,25 @@ _login_limiter = RateLimiter(key="auth:login", max_requests=10, window_seconds=6
 
 
 class RegisterRequest(BaseModel):
-    username: str = Field(min_length=3, max_length=64)
-    email: EmailStr
-    password: str = Field(min_length=8, max_length=128)
+    username: str = Field(
+        min_length=3,
+        max_length=64,
+        description="Unique handle, 3–64 chars, used as login.",
+        examples=["alice"],
+    )
+    email: EmailStr = Field(
+        description="Unique email address, used for login and recovery.",
+        examples=["alice@example.com"],
+    )
+    password: str = Field(
+        min_length=8,
+        max_length=128,
+        description=(
+            "8–128 chars; must not be a common breached password, must have "
+            "at least 4 unique characters, and must differ from the username."
+        ),
+        examples=["tr0ub4dor&3"],
+    )
 
     @field_validator("password")
     @classmethod
@@ -47,9 +63,24 @@ class RegisterRequest(BaseModel):
 
 
 class UpdateProfileRequest(BaseModel):
-    email: Optional[EmailStr] = None
-    avatar_url: Optional[str] = Field(default=None, max_length=500)
-    password: Optional[str] = Field(default=None, min_length=8, max_length=128)
+    email: Optional[EmailStr] = Field(
+        default=None,
+        description="New email; must remain unique across users.",
+        examples=["alice.new@example.com"],
+    )
+    avatar_url: Optional[str] = Field(
+        default=None,
+        max_length=500,
+        description="Absolute URL to an avatar image, up to 500 chars.",
+        examples=["https://cdn.example.com/avatars/alice.png"],
+    )
+    password: Optional[str] = Field(
+        default=None,
+        min_length=8,
+        max_length=128,
+        description="New password; same strength rules as on register.",
+        examples=["n3wp4ssw0rd!"],
+    )
 
     @field_validator("password")
     @classmethod
@@ -60,20 +91,28 @@ class UpdateProfileRequest(BaseModel):
 
 
 class UserResponse(BaseModel):
-    id: int
-    username: str
-    email: EmailStr
-    role: str
-    is_active: bool
-    avatar_url: Optional[str] = None
+    id: int = Field(description="User primary key.", examples=[42])
+    username: str = Field(description="Unique handle.", examples=["alice"])
+    email: EmailStr = Field(examples=["alice@example.com"])
+    role: str = Field(
+        description='Either "user" or "admin".', examples=["user"]
+    )
+    is_active: bool = Field(
+        description="False if the account has been disabled by an admin.",
+        examples=[True],
+    )
+    avatar_url: Optional[str] = Field(default=None, examples=[None])
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+    access_token: str = Field(
+        description="JWT access token; pass as 'Authorization: Bearer <token>'.",
+        examples=["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."],
+    )
+    token_type: str = Field(default="bearer", examples=["bearer"])
     user: UserResponse
 
 

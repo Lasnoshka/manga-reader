@@ -33,36 +33,66 @@ ALLOWED_SORT_FIELDS = {"id", "title", "author", "rating", "created_at", "updated
 
 
 class MangaCreateRequest(BaseModel):
-    title: str
-    description: str
-    cover_image: Optional[str] = None
-    author: Optional[str] = None
-    genres: List[str] = Field(default_factory=list)
+    title: str = Field(
+        description="Display title, must be unique (case-insensitive).",
+        examples=["Berserk"],
+    )
+    description: str = Field(
+        description="Long-form synopsis, plain text.",
+        examples=["A wandering swordsman seeks revenge against his former friend."],
+    )
+    cover_image: Optional[str] = Field(
+        default=None,
+        description="Absolute URL to the cover image.",
+        examples=["https://cdn.example.com/covers/berserk.jpg"],
+    )
+    author: Optional[str] = Field(
+        default=None,
+        description="Author name; free-form, optional.",
+        examples=["Kentaro Miura"],
+    )
+    genres: List[str] = Field(
+        default_factory=list,
+        description="Genre names. Unknown ones are created on the fly.",
+        examples=[["Action", "Dark Fantasy"]],
+    )
 
 
 class MangaUpdateRequest(BaseModel):
-    title: Optional[str] = None
+    title: Optional[str] = Field(default=None, examples=["Berserk: Black Swordsman Edition"])
     description: Optional[str] = None
     cover_image: Optional[str] = None
     author: Optional[str] = None
-    rating: Optional[float] = None
-    genres: Optional[List[str]] = None
+    rating: Optional[float] = Field(
+        default=None,
+        ge=0.0,
+        le=10.0,
+        description="Aggregate rating, 0.0–10.0.",
+        examples=[9.7],
+    )
+    genres: Optional[List[str]] = Field(
+        default=None,
+        description="Replaces the full genre set; pass [] to clear.",
+    )
 
 
 class GenreResponse(BaseModel):
-    id: int
-    name: str
+    id: int = Field(examples=[1])
+    name: str = Field(examples=["Action"])
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class MangaResponse(BaseModel):
-    id: int
-    title: str
+    id: int = Field(examples=[42])
+    title: str = Field(examples=["Berserk"])
     description: str
     cover_image: Optional[str] = None
-    author: Optional[str] = None
-    rating: float
+    author: Optional[str] = Field(default=None, examples=["Kentaro Miura"])
+    rating: float = Field(
+        description="Aggregate rating, 0.0–10.0; defaults to 0.0 for unrated titles.",
+        examples=[9.7],
+    )
     genres: List[GenreResponse] = []
     created_at: datetime
     updated_at: datetime
@@ -71,24 +101,30 @@ class MangaResponse(BaseModel):
 
 
 class MangaListResponse(BaseModel):
-    total: int
+    total: int = Field(description="Total matching items across all pages.", examples=[123])
     items: List[MangaResponse]
-    page: int
-    size: int
-    pages: int
+    page: int = Field(description="1-indexed page number.", examples=[1])
+    size: int = Field(description="Items per page (1–100).", examples=[20])
+    pages: int = Field(description="Total page count.", examples=[7])
 
 
 class PopularMangaResponse(MangaResponse):
-    views: int
+    views: int = Field(
+        description="Total view count from the popularity ranking.",
+        examples=[15234],
+    )
 
 
 class MangaChapterResponse(BaseModel):
-    id: int
-    manga_id: int
-    number: float
-    title: Optional[str] = None
-    volume: Optional[int] = None
-    pages_count: int
+    id: int = Field(examples=[101])
+    manga_id: int = Field(examples=[42])
+    number: float = Field(
+        description="Chapter number; floats allow .5 / extra chapters.",
+        examples=[12.5],
+    )
+    title: Optional[str] = Field(default=None, examples=["The Black Swordsman"])
+    volume: Optional[int] = Field(default=None, examples=[3])
+    pages_count: int = Field(examples=[24])
     uploaded_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
