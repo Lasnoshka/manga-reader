@@ -1,17 +1,76 @@
+import contextvars
 import inspect
+import json
 import logging
 import sys
 import time
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Optional
+
+from app.core.datetime_utils import utcnow
 
 LOG_DIR = Path("logs")
 LOG_DIR.mkdir(exist_ok=True)
 
-LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(filename)s:%(lineno)d | %(message)s"
-DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+_TEXT_LOG_PATTERN = (
+    "%(asctime)s | %(levelname)-8s | %(name)s | %(filename)s:%(lineno)d | %(message)s"
+)
+_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+request_id_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
+    "request_id", default=None
+)
+
+
+_RESERVED_RECORD_KEYS = frozenset(
+    {
+        "args", "asctime", "created", "exc_info", "exc_text", "filename",
+        "funcName", "levelname", "levelno", "lineno", "module", "msecs",
+        "message", "msg", "name", "pathname", "process", "processName",
+        "relativeCreated", "stack_info", "thread", "threadName",
+    }
+)
+
+
+class JsonFormatter(logging.Formatter):
+    """Render log records as a single-line JSON object."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        payload = {
+            "ts": utcnow().isoformat() + "Z",
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "file": f"{record.filename}:{record.lineno}",
+        }
+        rid = request_id_var.get()
+        if rid:
+            payload["request_id"] = rid
+
+        for key, value in record.__dict__.items():
+            if key in _RESERVED_RECORD_KEYS or key.startswith("_"):
+                continue
+            try:
+                json.dumps(value)
+            except (TypeError, ValueError):
+                value = repr(value)
+            payload[key] = value
+
+        if record.exc_info:
+            payload["exc_info"] = self.formatException(record.exc_info)
+
+        return json.dumps(payload, ensure_ascii=False)
+
+
+def _build_formatter() -> logging.Formatter:
+    # Local import to avoid a circular import at module load time.
+    from app.config import settings
+
+    if settings.LOG_FORMAT == "json":
+        return JsonFormatter()
+    return logging.Formatter(_TEXT_LOG_PATTERN, _DATE_FORMAT)
 
 
 class DailyRotatingLogger:
@@ -26,7 +85,7 @@ class DailyRotatingLogger:
         current_file = LOG_DIR / f"Logs_{self.current_date}.log"
         handler = logging.FileHandler(current_file, encoding="utf-8")
         handler.setLevel(logging.DEBUG)
-        handler.setFormatter(logging.Formatter(LOG_FORMAT, DATE_FORMAT))
+        handler.setFormatter(_build_formatter())
         return handler
 
     def _setup_handler(self) -> None:
@@ -37,7 +96,7 @@ class DailyRotatingLogger:
 
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(logging.INFO)
-        console_handler.setFormatter(logging.Formatter(LOG_FORMAT, DATE_FORMAT))
+        console_handler.setFormatter(_build_formatter())
         self.logger.addHandler(console_handler)
 
     def get_logger(self) -> logging.Logger:

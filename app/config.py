@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     CORS_ALLOW_METHODS: List[str] = Field(default_factory=lambda: ["*"])
     CORS_ALLOW_HEADERS: List[str] = Field(default_factory=lambda: ["*"])
 
+    LOG_FORMAT: str = Field(default="json", pattern="^(json|text)$")
+
     MAX_REQUEST_BODY_BYTES: int = 1 * 1024 * 1024
     ALLOWED_CONTENT_TYPES: List[str] = Field(
         default_factory=lambda: [
