@@ -42,5 +42,9 @@ def search_results_key(query: str, genre: str | None, limit: int) -> str:
     return f"search:q={query}:genre={genre or ''}:limit={limit}"
 
 
+def search_suggest_key(query: str, limit: int) -> str:
+    return f"search:suggest:q={query}:limit={limit}"
+
+
 def genres_list_key() -> str:
     return "genres:list"
