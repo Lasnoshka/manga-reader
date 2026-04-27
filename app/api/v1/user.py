@@ -18,12 +18,16 @@ from app.core.password_policy import (
     ensure_password_differs_from_username,
     validate_password_strength,
 )
+from app.core.rate_limit import RateLimiter
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.models.user import User
 from app.db.session_runtime import get_db
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+_register_limiter = RateLimiter(key="auth:register", max_requests=5, window_seconds=60)
+_login_limiter = RateLimiter(key="auth:login", max_requests=10, window_seconds=60)
 
 
 class RegisterRequest(BaseModel):
@@ -73,7 +77,12 @@ class TokenResponse(BaseModel):
     user: UserResponse
 
 
-@router.post("/register", response_model=TokenResponse, status_code=201)
+@router.post(
+    "/register",
+    response_model=TokenResponse,
+    status_code=201,
+    dependencies=[Depends(_register_limiter)],
+)
 @log_api_call
 async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db)):
     existing = await db.scalar(
@@ -96,7 +105,11 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
     return TokenResponse(access_token=token, user=UserResponse.model_validate(user))
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+    dependencies=[Depends(_login_limiter)],
+)
 @log_api_call
 async def login(
     form: OAuth2PasswordRequestForm = Depends(),
