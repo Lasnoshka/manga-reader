@@ -1,7 +1,18 @@
 from typing import List, Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+_INSECURE_JWT_PATTERNS = (
+    "test-secret",
+    "change-me",
+    "changeme",
+    "your-secret",
+    "default",
+    "example",
+    "placeholder",
+)
 
 
 class Settings(BaseSettings):
@@ -68,6 +79,25 @@ class Settings(BaseSettings):
             f"{values.get('REDIS_PORT')}/"
             f"{values.get('REDIS_DB')}"
         )
+
+    @model_validator(mode="after")
+    def _reject_insecure_secrets_in_production(self):
+        if self.DEBUG:
+            return self
+
+        secret_lower = self.JWT_SECRET.lower()
+        for pattern in _INSECURE_JWT_PATTERNS:
+            if pattern in secret_lower:
+                raise ValueError(
+                    f"JWT_SECRET appears to use an insecure placeholder ({pattern!r}); "
+                    "set a strong random value before running with DEBUG=False"
+                )
+        if len(set(self.JWT_SECRET)) < 8:
+            raise ValueError(
+                "JWT_SECRET has very low entropy (fewer than 8 unique characters); "
+                "use a strong random value"
+            )
+        return self
 
     model_config = SettingsConfigDict(
         env_file=".env",
