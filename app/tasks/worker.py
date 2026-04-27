@@ -3,14 +3,14 @@
 Запуск: `arq app.tasks.worker.WorkerSettings`
 """
 from arq.connections import RedisSettings
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 from app.cache.client import delete_pattern
 from app.config import settings
 from app.core.logger import logger
-from app.db.models.like import MangaLike
 from app.db.models.manga import Manga
 from app.db.session_runtime import AsyncSessionLocal, init_engine
+from app.services.rating_service import recompute_manga_rating
 
 
 async def startup(ctx):
@@ -23,28 +23,20 @@ async def shutdown(ctx):
 
 
 async def recalculate_manga_rating(ctx, manga_id: int) -> dict:
-    """Пересчитывает рейтинг манги: rating = min(10, likes * 0.5).
-
-    Простая эвристика для демонстрации — реальный скоринг был бы сложнее.
-    """
+    """Recompute Manga.rating / rating_count from the manga_ratings table."""
     async with AsyncSessionLocal() as session:
-        manga = await session.get(Manga, manga_id)
-        if manga is None:
+        summary = await recompute_manga_rating(session, manga_id)
+        if not summary["found"]:
             logger.warning(f"recalculate_manga_rating: manga {manga_id} not found")
             return {"manga_id": manga_id, "status": "not_found"}
-
-        likes = int(
-            (await session.execute(
-                select(func.count(MangaLike.id)).where(MangaLike.manga_id == manga_id)
-            )).scalar_one()
-        )
-        manga.rating = min(10.0, likes * 0.5)
         await session.commit()
 
     await delete_pattern(f"manga:detail:{manga_id}")
     await delete_pattern("manga:list:*")
-    logger.info(f"recalculate_manga_rating: manga={manga_id} likes={likes} rating={manga.rating}")
-    return {"manga_id": manga_id, "likes": likes, "rating": manga.rating}
+    logger.info(
+        f"recalculate_manga_rating: manga={manga_id} avg={summary['average']} count={summary['count']}"
+    )
+    return summary
 
 
 async def recalculate_all_ratings(ctx) -> dict:

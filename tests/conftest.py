@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 import app.db.session_runtime as session_runtime  # noqa: E402
 from app.db.base import Base  # noqa: E402
 from app.db.models import (  # noqa: E402, F401
-    bookmark, chapter, comment, genre, like, manga, page, reading_progress, user,
+    bookmark, chapter, comment, genre, like, manga, page, rating, reading_progress, user,
 )
 from app.db.session_runtime import get_db  # noqa: E402
 from app.main import app  # noqa: E402

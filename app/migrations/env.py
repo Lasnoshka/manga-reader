@@ -17,6 +17,7 @@ from app.db.models import (  # noqa: F401
     like,
     manga,
     page,
+    rating,
     reading_progress,
     user,
 )

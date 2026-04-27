@@ -90,8 +90,13 @@ class MangaResponse(BaseModel):
     cover_image: Optional[str] = None
     author: Optional[str] = Field(default=None, examples=["Kentaro Miura"])
     rating: float = Field(
-        description="Aggregate rating, 0.0–10.0; defaults to 0.0 for unrated titles.",
-        examples=[9.7],
+        description="Average user rating, 0.0–10.0; 0.0 when no votes yet.",
+        examples=[8.4],
+    )
+    rating_count: int = Field(
+        default=0,
+        description="Number of users who have rated this manga.",
+        examples=[37],
     )
     genres: List[GenreResponse] = []
     created_at: datetime

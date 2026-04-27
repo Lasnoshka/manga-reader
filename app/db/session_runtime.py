@@ -80,6 +80,7 @@ async def init_db():
                 like,
                 manga,
                 page,
+                rating,
                 reading_progress,
                 user,
             )

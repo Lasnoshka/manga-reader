@@ -30,6 +30,9 @@ class User(Base):
     likes: Mapped[List["MangaLike"]] = relationship(
         "MangaLike", back_populates="user", cascade="all, delete-orphan"
     )
+    ratings: Mapped[List["MangaRating"]] = relationship(
+        "MangaRating", back_populates="user", cascade="all, delete-orphan"
+    )
     comments: Mapped[List["Comment"]] = relationship(
         "Comment", back_populates="user", cascade="all, delete-orphan"
     )

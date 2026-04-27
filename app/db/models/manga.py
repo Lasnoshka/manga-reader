@@ -17,7 +17,8 @@ class Manga(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     author: Mapped[Optional[str]] = mapped_column(String(200))
     cover_image: Mapped[Optional[str]] = mapped_column(String(500))
-    rating: Mapped[float] = mapped_column(Float, default=0.0)
+    rating: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    rating_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
 
