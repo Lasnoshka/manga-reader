@@ -39,6 +39,17 @@ async def init_cache() -> None:
         redis_client = None
 
 
+async def cache_ping() -> Optional[bool]:
+    """True if Redis responds, False on error, None if cache is disabled."""
+    if redis_client is None:
+        return None
+    try:
+        await redis_client.ping()
+        return True
+    except RedisError:
+        return False
+
+
 async def close_cache() -> None:
     global redis_client
 

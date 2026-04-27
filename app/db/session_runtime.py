@@ -38,6 +38,18 @@ async def get_db():
             await session.close()
 
 
+async def db_ping() -> bool:
+    """Lightweight, silent DB readiness check."""
+    if engine is None:
+        return False
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        return True
+    except Exception:
+        return False
+
+
 async def test_connection() -> bool:
     """Test the database connection."""
     try:
