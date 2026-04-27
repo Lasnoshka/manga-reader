@@ -13,6 +13,7 @@ from app.core.exceptions import setup_exception_handlers
 from app.core.logger import logger
 from app.db.session_runtime import close_db, db_ping, init_db
 from app.middleware.logging_middleware import LoggingMiddleware
+from app.middleware.request_guard import RequestGuardMiddleware
 from app.tasks.queue import close_queue
 from app.web.routes import web_router
 
@@ -49,6 +50,11 @@ if settings.CORS_ORIGINS:
         allow_headers=settings.CORS_ALLOW_HEADERS,
     )
 
+app.add_middleware(
+    RequestGuardMiddleware,
+    max_body_bytes=settings.MAX_REQUEST_BODY_BYTES,
+    allowed_content_types=settings.ALLOWED_CONTENT_TYPES,
+)
 app.add_middleware(LoggingMiddleware)
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(web_router)

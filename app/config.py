@@ -44,7 +44,22 @@ class Settings(BaseSettings):
     CORS_ALLOW_METHODS: List[str] = Field(default_factory=lambda: ["*"])
     CORS_ALLOW_HEADERS: List[str] = Field(default_factory=lambda: ["*"])
 
-    @field_validator("CORS_ORIGINS", "CORS_ALLOW_METHODS", "CORS_ALLOW_HEADERS", mode="before")
+    MAX_REQUEST_BODY_BYTES: int = 1 * 1024 * 1024
+    ALLOWED_CONTENT_TYPES: List[str] = Field(
+        default_factory=lambda: [
+            "application/json",
+            "application/x-www-form-urlencoded",
+            "multipart/form-data",
+        ]
+    )
+
+    @field_validator(
+        "CORS_ORIGINS",
+        "CORS_ALLOW_METHODS",
+        "CORS_ALLOW_HEADERS",
+        "ALLOWED_CONTENT_TYPES",
+        mode="before",
+    )
     @classmethod
     def split_csv(cls, v):
         if isinstance(v, str):
