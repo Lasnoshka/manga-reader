@@ -102,6 +102,76 @@ function appRoot() {
     };
 }
 
+/* ===== Topbar typeahead search ===== */
+function topbarSearch() {
+    return {
+        q: "",
+        suggestions: [],
+        open: false,
+        loading: false,
+        error: "",
+        cursor: -1,
+        _seq: 0,
+
+        async fetchSuggestions() {
+            const term = this.q.trim();
+            if (!term) {
+                this.suggestions = [];
+                this.open = false;
+                this.cursor = -1;
+                return;
+            }
+            const seq = ++this._seq;
+            this.loading = true;
+            this.error = "";
+            try {
+                const data = await api.get(`/search/suggest?q=${encodeURIComponent(term)}&limit=6`);
+                if (seq !== this._seq) return;  // a newer request finished first
+                this.suggestions = data || [];
+                this.cursor = -1;
+                this.open = true;
+            } catch (e) {
+                if (seq !== this._seq) return;
+                this.suggestions = [];
+                this.error = "Ошибка поиска";
+                this.open = true;
+            } finally {
+                if (seq === this._seq) this.loading = false;
+            }
+        },
+
+        onFocus() {
+            if (this.q.trim() && this.suggestions.length) this.open = true;
+        },
+
+        moveCursor(delta) {
+            if (!this.suggestions.length) return;
+            this.open = true;
+            const next = this.cursor + delta;
+            if (next < 0) this.cursor = this.suggestions.length - 1;
+            else if (next >= this.suggestions.length) this.cursor = 0;
+            else this.cursor = next;
+        },
+
+        onEnter(event) {
+            if (this.cursor >= 0 && this.suggestions[this.cursor]) {
+                event.preventDefault();
+                window.location.href = `/manga/${this.suggestions[this.cursor].id}`;
+            }
+            // Otherwise let the form submit and go to /catalog?q=...
+        },
+
+        onSubmit() {
+            this.close();
+        },
+
+        close() {
+            this.open = false;
+            this.cursor = -1;
+        },
+    };
+}
+
 /* ===== Auth forms ===== */
 function loginForm() {
     return {

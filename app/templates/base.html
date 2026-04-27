@@ -24,9 +24,56 @@
                    x-show="user && user.role === 'admin'"
                    x-cloak>Админка</a>
             </nav>
-            <form class="topbar__search" method="get" action="/catalog">
-                <input type="text" name="q" placeholder="Поиск манги, автора" />
+            <form class="topbar__search"
+                  method="get"
+                  action="/catalog"
+                  x-data="topbarSearch()"
+                  @submit="onSubmit($event)">
+                <input type="text"
+                       name="q"
+                       placeholder="Поиск манги, автора"
+                       autocomplete="off"
+                       x-model="q"
+                       @input.debounce.250ms="fetchSuggestions()"
+                       @focus="onFocus()"
+                       @keydown.escape.prevent="close()"
+                       @keydown.arrow-down.prevent="moveCursor(1)"
+                       @keydown.arrow-up.prevent="moveCursor(-1)"
+                       @keydown.enter="onEnter($event)" />
                 <button type="submit" aria-label="Найти">⌕</button>
+                <div class="search-suggest"
+                     x-show="open && (suggestions.length || loading || error)"
+                     @click.outside="close()"
+                     x-cloak>
+                    <template x-if="loading">
+                        <div class="search-suggest__hint">Ищем…</div>
+                    </template>
+                    <template x-if="error">
+                        <div class="search-suggest__hint search-suggest__hint--error" x-text="error"></div>
+                    </template>
+                    <template x-for="(item, i) in suggestions" :key="item.id">
+                        <a class="search-suggest__row"
+                           :class="cursor === i ? 'is-active' : ''"
+                           :href="`/manga/${item.id}`"
+                           @mouseenter="cursor = i">
+                            <div class="search-suggest__thumb">
+                                <template x-if="item.cover_image">
+                                    <img :src="item.cover_image" :alt="item.title" />
+                                </template>
+                                <template x-if="!item.cover_image">
+                                    <div class="search-suggest__placeholder" x-text="item.title[0]"></div>
+                                </template>
+                            </div>
+                            <div class="search-suggest__text">
+                                <div class="search-suggest__title" x-text="item.title"></div>
+                                <div class="search-suggest__author" x-show="item.author" x-text="item.author"></div>
+                            </div>
+                        </a>
+                    </template>
+                    <template x-if="!loading && !error && q && suggestions.length === 0">
+                        <div class="search-suggest__hint">Ничего не нашли. Нажми Enter, чтобы открыть полный поиск.</div>
+                    </template>
+                </div>
             </form>
             <div class="topbar__user">
                 <div class="auth-buttons" x-show="!user">
