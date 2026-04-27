@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -27,6 +27,18 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
 
     DATABASE_URL: str = ""
+
+    CORS_ORIGINS: List[str] = Field(default_factory=list)
+    CORS_ALLOW_CREDENTIALS: bool = True
+    CORS_ALLOW_METHODS: List[str] = Field(default_factory=lambda: ["*"])
+    CORS_ALLOW_HEADERS: List[str] = Field(default_factory=lambda: ["*"])
+
+    @field_validator("CORS_ORIGINS", "CORS_ALLOW_METHODS", "CORS_ALLOW_HEADERS", mode="before")
+    @classmethod
+    def split_csv(cls, v):
+        if isinstance(v, str):
+            return [item.strip() for item in v.split(",") if item.strip()]
+        return v
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
