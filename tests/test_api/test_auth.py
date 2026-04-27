@@ -13,7 +13,7 @@ async def test_register_returns_token_and_user(client):
 
 
 async def test_register_duplicate_username_conflicts(client):
-    payload = {"username": "dup", "email": "a@b.c", "password": "password123"}
+    payload = {"username": "dup", "email": "a@b.c", "password": "tr0ub4dor&3"}
     assert (await client.post("/api/v1/auth/register", json=payload)).status_code == 201
 
     r = await client.post("/api/v1/auth/register", json={**payload, "email": "x@y.z"})

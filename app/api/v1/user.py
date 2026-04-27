@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator, model_validator
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +14,10 @@ from app.core.exceptions import (
     ResourceAlreadyExistsError,
 )
 from app.core.logger import log_api_call
+from app.core.password_policy import (
+    ensure_password_differs_from_username,
+    validate_password_strength,
+)
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.models.user import User
 from app.db.session_runtime import get_db
@@ -27,11 +31,28 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
 
+    @field_validator("password")
+    @classmethod
+    def _check_password_strength(cls, v: str) -> str:
+        return validate_password_strength(v)
+
+    @model_validator(mode="after")
+    def _check_password_not_username(self):
+        ensure_password_differs_from_username(self.password, self.username)
+        return self
+
 
 class UpdateProfileRequest(BaseModel):
     email: Optional[EmailStr] = None
     avatar_url: Optional[str] = Field(default=None, max_length=500)
     password: Optional[str] = Field(default=None, min_length=8, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def _check_password_strength(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        return validate_password_strength(v)
 
 
 class UserResponse(BaseModel):

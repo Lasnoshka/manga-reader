@@ -58,7 +58,7 @@ async def user_token(client):
     r = await client.post("/api/v1/auth/register", json={
         "username": "alice",
         "email": "alice@example.com",
-        "password": "password123",
+        "password": "tr0ub4dor&3",
     })
     assert r.status_code == 201, r.text
     return r.json()["access_token"]
@@ -69,7 +69,7 @@ async def admin_token(client, session_factory):
     r = await client.post("/api/v1/auth/register", json={
         "username": "boss",
         "email": "boss@example.com",
-        "password": "password123",
+        "password": "tr0ub4dor&3",
     })
     assert r.status_code == 201, r.text
     # Повышаем до admin напрямую в БД
