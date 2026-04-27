@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.datetime_utils import utcnow
@@ -11,6 +11,7 @@ class Bookmark(Base):
     __tablename__ = "bookmarks"
     __table_args__ = (
         UniqueConstraint("user_id", "manga_id", name="uq_bookmark_user_manga"),
+        Index("ix_bookmarks_user_created", "user_id", "created_at"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
