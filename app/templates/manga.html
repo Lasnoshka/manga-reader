@@ -16,7 +16,7 @@
         {% if manga.author %}<div class="manga-detail__author">{{ manga.author }}</div>{% endif %}
 
         <div class="manga-detail__meta">
-            <span class="meta-pill">★ <strong>{{ "%.1f"|format(manga.rating or 0) }}</strong></span>
+            <span class="meta-pill">★ <strong x-text="ratingAvgLabel">{{ "%.1f"|format(manga.rating or 0) }}</strong> <span class="meta-pill__sub" x-text="`(${ratingCount})`">({{ manga.rating_count or 0 }})</span></span>
             <span class="meta-pill">Глав: <strong>{{ chapters|length }}</strong></span>
             <span class="meta-pill">❤ <strong x-text="likesCount">{{ likes_count }}</strong></span>
             <span class="meta-pill">💬 <strong>{{ comments_count }}</strong></span>
@@ -31,6 +31,44 @@
         {% endif %}
 
         <div class="manga-detail__desc">{{ manga.description }}</div>
+
+        <div class="rating-block">
+            <div class="rating-block__head">
+                <div class="rating-block__avg">
+                    <span class="rating-block__avg-value" x-text="ratingAvgLabel">{{ "%.1f"|format(manga.rating or 0) }}</span>
+                    <span class="rating-block__avg-max">/ 10</span>
+                </div>
+                <div class="rating-block__meta">
+                    <div class="rating-block__title">Оценить тайтл</div>
+                    <div class="rating-block__count">
+                        <span x-text="ratingCount">{{ manga.rating_count or 0 }}</span>
+                        <span x-text="ratingNoun(ratingCount)">{{ 'голосов' if (manga.rating_count or 0) != 1 else 'голос' }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="rating-block__stars" :class="user ? '' : 'is-disabled'" @mouseleave="ratingHover = 0">
+                <template x-for="i in 10" :key="i">
+                    <button type="button"
+                            class="rating-star"
+                            :class="((ratingHover ? ratingHover >= i : (myRating || 0) >= i)) ? 'is-on' : ''"
+                            @click="user ? rate(i) : goLogin()"
+                            @mouseenter="user && (ratingHover = i)"
+                            :title="user ? `Поставить ${i}/10` : 'Войди, чтобы голосовать'"
+                            :aria-label="`Оценить на ${i} из 10`">
+                        ★
+                    </button>
+                </template>
+                <button x-show="myRating" type="button" class="rating-clear" @click="unrate()" x-cloak>
+                    Убрать оценку
+                </button>
+            </div>
+            <div class="rating-block__hint" x-show="!user" x-cloak>
+                <a href="/login">Войди</a>, чтобы поставить оценку.
+            </div>
+            <div class="rating-block__hint" x-show="user && myRating" x-cloak>
+                Твоя оценка: <strong x-text="myRating"></strong>/10
+            </div>
+        </div>
 
         <div class="manga-detail__actions">
             {% if chapters %}

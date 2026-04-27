@@ -33,7 +33,7 @@
                         <span class="admin-col-id admin-table__id" x-text="m.id"></span>
                         <a class="admin-col-title admin-table__title" :href="`/manga/${m.id}`" x-text="m.title"></a>
                         <span class="admin-col-author admin-table__muted" x-text="m.author || '—'"></span>
-                        <span class="admin-col-rating" x-text="(m.rating || 0).toFixed(1)"></span>
+                        <span class="admin-col-rating" x-text="`${(m.rating || 0).toFixed(1)} (${m.rating_count || 0})`"></span>
                         <span class="admin-col-actions">
                             <button class="btn btn--ghost btn--sm" @click="openEdit(m)">Изменить</button>
                             <button class="btn btn--ghost btn--sm admin-table__danger" @click="remove(m)">Удалить</button>
@@ -72,10 +72,6 @@
                         <label>
                             <span>Обложка (URL)</span>
                             <input type="text" x-model="form.cover_image" placeholder="https://…" />
-                        </label>
-                        <label x-show="editingId">
-                            <span>Рейтинг</span>
-                            <input type="number" step="0.1" min="0" max="10" x-model.number="form.rating" />
                         </label>
                         <label>
                             <span>Жанры (через запятую)</span>

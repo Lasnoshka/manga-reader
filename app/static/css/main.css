@@ -445,7 +445,64 @@ img { max-width: 100%; display: block; }
     color: var(--text-secondary);
 }
 .meta-pill strong { color: var(--text-primary); }
+.meta-pill__sub { color: var(--text-muted); margin-left: 4px; }
 .manga-detail__genres { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 22px; }
+
+.rating-block {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 24px;
+}
+.rating-block__head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+.rating-block__avg {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+.rating-block__avg-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+}
+.rating-block__avg-max {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+.rating-block__meta { display: flex; flex-direction: column; gap: 2px; }
+.rating-block__title { font-size: 14px; color: var(--text-primary); font-weight: 600; }
+.rating-block__count { font-size: 12px; color: var(--text-secondary); }
+.rating-block__stars { display: flex; align-items: center; gap: 2px; }
+.rating-block__stars.is-disabled .rating-star { cursor: not-allowed; opacity: 0.6; }
+.rating-star {
+    font-size: 24px;
+    color: var(--text-muted);
+    padding: 2px 4px;
+    transition: color 0.15s, transform 0.1s;
+    line-height: 1;
+}
+.rating-star.is-on { color: #ffc452; }
+.rating-star:hover { transform: scale(1.15); }
+.rating-clear {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: 12px;
+    text-decoration: underline dotted;
+}
+.rating-clear:hover { color: var(--danger); }
+.rating-block__hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+}
+.rating-block__hint a { color: var(--accent); text-decoration: underline; }
 .manga-detail__desc {
     background: var(--bg-elev);
     border: 1px solid var(--border);

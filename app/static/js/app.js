@@ -152,7 +152,7 @@ function registerForm() {
     };
 }
 
-/* ===== Manga page: like + bookmark ===== */
+/* ===== Manga page: like + bookmark + rating ===== */
 function mangaPage(mangaId, initialLikes) {
     return {
         mangaId,
@@ -160,13 +160,23 @@ function mangaPage(mangaId, initialLikes) {
         liked: false,
         bookmark: null,
         bookmarkFolders: BOOKMARK_FOLDERS,
+        ratingAvg: 0,
+        ratingCount: 0,
+        myRating: 0,
+        ratingHover: 0,
         get user() { return Alpine.store("auth").user; },
+        get ratingAvgLabel() { return this.ratingAvg ? this.ratingAvg.toFixed(1) : "0.0"; },
 
         async init() {
             try {
                 const status = await api.get(`/manga/${this.mangaId}/like/`);
                 this.likesCount = status.likes_count;
                 this.liked = status.liked;
+            } catch (e) { /* ignore */ }
+
+            try {
+                const rs = await api.get(`/manga/${this.mangaId}/rating/`);
+                this.applyRating(rs);
             } catch (e) { /* ignore */ }
 
             if (api.token()) {
@@ -176,6 +186,37 @@ function mangaPage(mangaId, initialLikes) {
                     this.bookmark = found ? found.folder : null;
                 } catch (e) { /* ignore */ }
             }
+        },
+
+        applyRating(rs) {
+            this.ratingAvg = rs.average || 0;
+            this.ratingCount = rs.count || 0;
+            this.myRating = rs.my_score || 0;
+        },
+
+        ratingNoun(n) {
+            const m10 = n % 10, m100 = n % 100;
+            if (m10 === 1 && m100 !== 11) return "голос";
+            if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return "голоса";
+            return "голосов";
+        },
+
+        goLogin() { window.location.href = "/login"; },
+
+        async rate(score) {
+            try {
+                const rs = await api.put(`/manga/${this.mangaId}/rating/`, { score });
+                this.applyRating(rs);
+                this.ratingHover = 0;
+            } catch (e) { alert(e.message); }
+        },
+
+        async unrate() {
+            try {
+                const rs = await api.del(`/manga/${this.mangaId}/rating/`);
+                this.applyRating(rs);
+                this.ratingHover = 0;
+            } catch (e) { alert(e.message); }
         },
 
         async toggleLike() {
@@ -317,7 +358,7 @@ function readerBar(mangaId, chapterId, totalPages, prevId, nextId) {
 /* ===== Admin: manga CRUD ===== */
 const EMPTY_FORM = {
     title: "", author: "", cover_image: "",
-    description: "", rating: null, genresText: "",
+    description: "", genresText: "",
 };
 
 function adminManga() {
@@ -379,7 +420,6 @@ function adminManga() {
                 author: m.author || "",
                 cover_image: m.cover_image || "",
                 description: m.description || "",
-                rating: m.rating ?? null,
                 genresText: (m.genres || []).map(g => g.name).join(", "),
             };
             this.error = "";
@@ -401,9 +441,6 @@ function adminManga() {
                 author: this.form.author || null,
                 genres: this.form.genresText.split(",").map(s => s.trim()).filter(Boolean),
             };
-            if (this.editingId && this.form.rating !== null && this.form.rating !== "") {
-                payload.rating = Number(this.form.rating);
-            }
             try {
                 if (this.editingId) {
                     await api.patch(`/manga/${this.editingId}`, payload);

@@ -63,13 +63,6 @@ class MangaUpdateRequest(BaseModel):
     description: Optional[str] = None
     cover_image: Optional[str] = None
     author: Optional[str] = None
-    rating: Optional[float] = Field(
-        default=None,
-        ge=0.0,
-        le=10.0,
-        description="Aggregate rating, 0.0–10.0.",
-        examples=[9.7],
-    )
     genres: Optional[List[str]] = Field(
         default=None,
         description="Replaces the full genre set; pass [] to clear.",
